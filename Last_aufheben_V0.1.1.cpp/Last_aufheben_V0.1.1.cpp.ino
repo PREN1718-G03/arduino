@@ -18,6 +18,8 @@
 #define END_SWITCH 8
 
 /*Initialisierung*/
+long l_stepLiftMot = 0;
+
 void setup() {
   pinMode(DIR_DRIVE, OUTPUT);
   digitalWrite(DIR_DRIVE, LOW);
@@ -31,7 +33,6 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
-  long l_stepLiftMot = 0;
   while(!digitalRead(START_SWITCH));
   for(long zaehler = 0;zaehler <= 30000;zaehler++){
     if(l_stepLiftMot <= 30000){
