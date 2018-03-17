@@ -1,2 +1,3 @@
 # arduino
-Alle Programme sind in der Sprache C geschrieben. In diesem Repository sind auch die dazugehörige Dokumentationen der Programme abgelegt.
+Alle Programme sind in der Sprache C geschrieben.
+In diesem Repository sind auch die dazugehörige Dokumentationen der Programme abgelegt.
