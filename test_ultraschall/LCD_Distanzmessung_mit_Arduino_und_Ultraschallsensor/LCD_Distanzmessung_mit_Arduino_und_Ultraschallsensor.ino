@@ -1,8 +1,8 @@
  #include <LiquidCrystal.h> //Load Liquid Crystal Library
 LiquidCrystal LCD(10, 9, 5, 4, 3, 2);  //Create Liquid Crystal Object called LCD
  
-int trigPin=13; //Sensor Trip pin connected to Arduino pin 13
-int echoPin=11;  //Sensor Echo pin connected to Arduino pin 11
+int trigPin=A0; //Sensor Trip pin connected to Arduino pin 13
+int echoPin=A1;  //Sensor Echo pin connected to Arduino pin 11
 int myCounter=0;  //declare your variable myCounter and set to 0
 int servoControlPin=6; //Servo control line is connected to pin 6
 float pingTime;  //time for ping to travel from sensor to target and return
