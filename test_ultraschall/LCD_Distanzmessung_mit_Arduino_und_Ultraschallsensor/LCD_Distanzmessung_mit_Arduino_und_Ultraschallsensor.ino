@@ -1,34 +1,47 @@
-#include <liquidcrystal.h> // Lade Liquid Crystal Bibliothek
-
- Liquidcrystal LCD (11,10,9,2,3,4,5);  // Erstellt Liquid Crystal Object genannt LCD </liquidcrystal.h>
-
- #define trigPin 13 // Sensor Echo Pin auf Arduino Pin 13 verbunden
- #define echoPin 12 // Sensor Trip Pin an Pin Arduino 
-
- Leere setup () 
- {  
-   pinMode (trigPin, OUTPUT);
-   pinMode (echoPin, INPUT);
+ #include <LiquidCrystal.h> //Load Liquid Crystal Library
+LiquidCrystal LCD(10, 9, 5, 4, 3, 2);  //Create Liquid Crystal Object called LCD
+ 
+int trigPin=13; //Sensor Trip pin connected to Arduino pin 13
+int echoPin=11;  //Sensor Echo pin connected to Arduino pin 11
+int myCounter=0;  //declare your variable myCounter and set to 0
+int servoControlPin=6; //Servo control line is connected to pin 6
+float pingTime;  //time for ping to travel from sensor to target and return
+float targetDistance; //Distance to Target in inches
+float speedOfSound=1236; //Speed of sound in kilometers per hour when temp is 20 degrees Celsius.
+ 
+void setup() {
   
-   LCD.begin (16,2);  // Teile Arduino, um Ihre 16 Spalte 2 Zeile LCD starten
-   LCD.setCursor (0,0);  // Set LCD Cursor zum linken oberen Ecke, Spalte 0, Zeile 0
-   LCD.print ("Target Entfernung:");  // Print Nachricht auf Erste Zeile
- }
-
- Leere Schleife () {
-   lange Zeit, Strecke;
-   digital (trigPin, LOW);
-   delayMicroseconds (2);
-   digital (trigPin, HIGH);
-   delayMicroseconds (10);
-   digital (trigPin, LOW);
-   Dauer = pulseIn (echoPin, HIGH);
-   Abstand = (Dauer / 2) / 29,1;
-
-   LCD.setCursor (0,1);  // Setzt Cursor auf ersten Spalte der zweiten Reihe
-   LCD.print ("");  // Print Rohlinge, um die Zeile zu löschen
-   LCD.setCursor (0,1);  // Setze Cursor erneut, um erste Spalte der zweiten Reihe
-   LCD.print (Entfernung);  // Print gemessene Abstand
-   LCD.print ("cm");  // Print Ihre Einheiten.
-   Verzögerung (250);  // Pause Dinge absetzen zu lassen
- }
+Serial.begin(9600);
+pinMode(trigPin, OUTPUT);
+pinMode(echoPin, INPUT);
+ 
+LCD.begin(16,2); //Tell Arduino to start your 16 column 2 row LCD
+LCD.setCursor(0,0);  //Set LCD cursor to upper left corner, column 0, row 0
+LCD.print("Target Distance:");  //Print Message on First Row
+}
+ 
+void loop() {
+  
+  digitalWrite(trigPin, LOW); //Set trigger pin low
+  delayMicroseconds(2000); //Let signal settle
+  digitalWrite(trigPin, HIGH); //Set trigPin high
+  delayMicroseconds(15); //Delay in high state
+  digitalWrite(trigPin, LOW); //ping has now been sent
+  delayMicroseconds(10); //Delay in high state
+  
+  pingTime = pulseIn(echoPin, HIGH);  //pingTime is presented in microceconds
+  pingTime=pingTime/1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
+  pingTime=pingTime/3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
+  targetDistance= speedOfSound * pingTime;  //This will be in miles, since speed of sound was miles per hour
+  targetDistance=targetDistance/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
+  targetDistance= targetDistance*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
+  
+  LCD.setCursor(0,1);  //Set cursor to first column of second row
+  LCD.print("                "); //Print blanks to clear the row
+  LCD.setCursor(0,1);   //Set Cursor again to first column of second row
+  LCD.print(targetDistance); //Print measured distance
+  LCD.print(" cm");  //Print your units.
+  delay(250); //pause to let things settle
+  
+  
+  }  
