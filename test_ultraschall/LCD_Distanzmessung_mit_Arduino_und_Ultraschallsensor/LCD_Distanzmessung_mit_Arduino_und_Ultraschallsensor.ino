@@ -6,18 +6,18 @@ int echoPin=A1;  //Sensor Echo pin connected to Arduino pin 11
 int myCounter=0;  //declare your variable myCounter and set to 0
 int servoControlPin=6; //Servo control line is connected to pin 6
 float pingTime;  //time for ping to travel from sensor to target and return
-float targetDistance; //Distance to Target in inches
+float targetDistance; //Distance to Target in centimeters
 float speedOfSound=1236; //Speed of sound in kilometers per hour when temp is 20 degrees Celsius.
  
 void setup() {
   
-Serial.begin(9600);
-pinMode(trigPin, OUTPUT);
-pinMode(echoPin, INPUT);
- 
-LCD.begin(16,2); //Tell Arduino to start your 16 column 2 row LCD
-LCD.setCursor(0,0);  //Set LCD cursor to upper left corner, column 0, row 0
-LCD.print("Target Distance:");  //Print Message on First Row
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+   
+  LCD.begin(16,2); //Tell Arduino to start your 16 column 2 row LCD
+  LCD.setCursor(0,0);  //Set LCD cursor to upper left corner, column 0, row 0
+  LCD.print("Target Distance:");  //Print Message on First Row
 }
  
 void loop() {
