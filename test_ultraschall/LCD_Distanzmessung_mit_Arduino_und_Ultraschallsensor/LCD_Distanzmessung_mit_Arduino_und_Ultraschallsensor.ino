@@ -38,8 +38,6 @@ void loop() {
   targetDistance=targetDistance/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
   targetDistance= targetDistance*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
   
-  LCD.setCursor(0,1);  //Set cursor to first column of second row
-  LCD.print("x-Achse"); //Print blanks to clear the row
   LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
   LCD.print(targetDistance); //Print measured distance
   LCD.print("cm  ");  //Print your units.
