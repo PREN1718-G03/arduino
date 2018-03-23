@@ -1,0 +1,48 @@
+ #include <LiquidCrystal.h> //Load Liquid Crystal Library
+LiquidCrystal LCD(10, 9, 5, 4, 3, 2);  //Create Liquid Crystal Object called LCD
+ 
+int trigPin=A0; //Sensor Trip pin connected to Arduino pin 13
+int echoPin=A1;  //Sensor Echo pin connected to Arduino pin 11
+int myCounter=0;  //declare your variable myCounter and set to 0
+int servoControlPin=6; //Servo control line is connected to pin 6
+float pingTime;  //time for ping to travel from sensor to target and return
+float targetDistance; //Distance to Target in centimeters
+float speedOfSound=1236; //Speed of sound in kilometers per hour when temp is 20 degrees Celsius.
+
+void setup() {
+  
+  Serial.begin(9600);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+   
+  LCD.begin(16,2); //Tell Arduino to start your 16 column 2 row LCD
+  LCD.setCursor(0,0);  //Set LCD cursor to upper left corner, column 0, row 0
+  LCD.print("y-Achse");  //Print Message on First Row
+  LCD.setCursor(0,1);  //Set cursor to first column of second row
+  LCD.print("x-Achse"); //Print blanks to clear the row
+}
+ 
+void loop() {
+  
+  digitalWrite(trigPin, LOW); //Set trigger pin low
+  delayMicroseconds(2000); //Let signal settle
+  digitalWrite(trigPin, HIGH); //Set trigPin high
+  delayMicroseconds(15); //Delay in high state
+  digitalWrite(trigPin, LOW); //ping has now been sent
+  delayMicroseconds(10); //Delay in high state
+  
+  pingTime = pulseIn(echoPin, HIGH);  //pingTime is presented in microceconds
+  pingTime=pingTime/1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
+  pingTime=pingTime/3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
+  targetDistance= speedOfSound * pingTime;  //This will be in miles, since speed of sound was miles per hour
+  targetDistance=targetDistance/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
+  targetDistance= targetDistance*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
+
+
+  LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
+  LCD.print(targetDistance, 1); //Print measured distance
+  LCD.print("cm      ");  //Print your units.
+  delay(1000); //pause to let things settle
+  
+  
+  }  
