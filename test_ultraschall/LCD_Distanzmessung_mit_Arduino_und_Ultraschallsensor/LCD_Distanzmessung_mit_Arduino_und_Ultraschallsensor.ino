@@ -17,7 +17,9 @@ void setup() {
    
   LCD.begin(16,2); //Tell Arduino to start your 16 column 2 row LCD
   LCD.setCursor(0,0);  //Set LCD cursor to upper left corner, column 0, row 0
-  LCD.print("Target Distance:");  //Print Message on First Row
+  LCD.print("Distanz:");  //Print Message on First Row
+  LCD.setCursor(0,1);  //Set cursor to first column of second row
+  LCD.print("x-Achse"); //Print blanks to clear the row
 }
  
 void loop() {
@@ -37,11 +39,11 @@ void loop() {
   targetDistance= targetDistance*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
   
   LCD.setCursor(0,1);  //Set cursor to first column of second row
-  LCD.print("                "); //Print blanks to clear the row
-  LCD.setCursor(0,1);   //Set Cursor again to first column of second row
+  LCD.print("x-Achse"); //Print blanks to clear the row
+  LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
   LCD.print(targetDistance); //Print measured distance
-  LCD.print(" cm");  //Print your units.
-  delay(250); //pause to let things settle
+  LCD.print("cm  ");  //Print your units.
+  delay(1000); //pause to let things settle
   
   
   }  
