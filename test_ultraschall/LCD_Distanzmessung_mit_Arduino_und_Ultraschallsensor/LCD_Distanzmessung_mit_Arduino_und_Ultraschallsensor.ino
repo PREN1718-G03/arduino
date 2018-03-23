@@ -8,7 +8,7 @@ int servoControlPin=6; //Servo control line is connected to pin 6
 float pingTime;  //time for ping to travel from sensor to target and return
 float targetDistance; //Distance to Target in centimeters
 float speedOfSound=1236; //Speed of sound in kilometers per hour when temp is 20 degrees Celsius.
- 
+
 void setup() {
   
   Serial.begin(9600);
@@ -37,9 +37,10 @@ void loop() {
   targetDistance= speedOfSound * pingTime;  //This will be in miles, since speed of sound was miles per hour
   targetDistance=targetDistance/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
   targetDistance= targetDistance*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
-  
+
+
   LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
-  LCD.print(targetDistance); //Print measured distance
+  LCD.print(targetDistance, 1); //Print measured distance
   LCD.print("cm  ");  //Print your units.
   delay(1000); //pause to let things settle
   
