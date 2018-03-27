@@ -4,7 +4,7 @@ LiquidCrystal LCD(48, 49, 50, 51, 52, 53);  //Create Liquid Crystal Object calle
 int trigPinX=A10; //Sensor Trip pin connected to Arduino pin A10
 int echoPinX=A11;  //Sensor Echo pin connected to Arduino pin A11
 int echoPinY=A9;  //Sensor Echo pin connected to Arduino pin A9
-int echoPinY=A8;  //Sensor Echo pin connected to Arduino pin A8
+int trigPinY=A8;  //Sensor Echo pin connected to Arduino pin A8
 int myCounter=0;  //declare your variable myCounter and set to 0
 int servoControlPin=6; //Servo control line is connected to pin 6
 float pingTimeX;  //time for ping to travel from sensor to target and return for x-Axis
@@ -44,6 +44,10 @@ void loop() {
   targetDistanceX=targetDistanceX/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
   targetDistanceX= targetDistanceX*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
 
+  LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
+  LCD.print(targetDistanceX, 1); //Print measured distance
+  LCD.print("cm      ");  //Print your units.
+  
   digitalWrite(trigPinY, LOW); //Set trigger pin low
   delayMicroseconds(2000); //Let signal settle
   digitalWrite(trigPinY, HIGH); //Set trigPin high
@@ -58,12 +62,8 @@ void loop() {
   targetDistanceY=targetDistanceY/2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
   targetDistanceY= targetDistanceY*100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
 
-  LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
-  LCD.print(targetDistanceX, 1); //Print measured distance
-  LCD.print("cm      ");  //Print your units.
-  
-  LCD.setCursor(8,2);   //Set Cursor again to eigth column of second row
-  LCD.print(targetDistancey, 1); //Print measured distance
+  LCD.setCursor(8,0);   //Set Cursor again to eigth column of second row
+  LCD.print(targetDistanceY, 1); //Print measured distance
   LCD.print("cm      ");  //Print your units.
   delay(1000); //pause to let things settle
   
