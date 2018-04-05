@@ -4,14 +4,19 @@ const byte rxPin = 0;
 const byte txPin = 1;
 
 // set up a new serial object
-SoftwareSerial SerialObject (rxPin, txPin);
+SoftwareSerial serialObject = SoftwareSerial(rxPin, txPin);
+int index;
 
 void setup() {
-  // put your setup code here, to run once:
-  SerialObject.begin()
+  pinMode(rxPin, INPUT);
+  pinMode(txPin, OUTPUT);
+  // Set the BAUD rate for the serial communication
+  serialObject.begin(9600);
+  index = 0;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  serialObject.println(index);
+  index++;
+  delay(1000);
 }
