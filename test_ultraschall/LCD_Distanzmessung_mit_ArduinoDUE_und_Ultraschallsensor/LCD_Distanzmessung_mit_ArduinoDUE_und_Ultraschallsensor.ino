@@ -47,7 +47,6 @@ void loop() {
   LCD.setCursor(8,1);   //Set Cursor again to eigth column of second row
   LCD.print(targetDistanceX, 1); //Print measured distance
   LCD.print("cm      ");  //Print your units.
-  
   digitalWrite(trigPinY, LOW); //Set trigger pin low
   delayMicroseconds(2000); //Let signal settle
   digitalWrite(trigPinY, HIGH); //Set trigPin high
@@ -64,6 +63,7 @@ void loop() {
 
   LCD.setCursor(8,0);   //Set Cursor again to eigth column of second row
   LCD.print(targetDistanceY, 1); //Print measured distance
+
   LCD.print("cm      ");  //Print your units.
   delay(1000); //pause to let things settle
   
