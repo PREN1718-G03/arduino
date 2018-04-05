@@ -1,25 +1,27 @@
 #include <SoftwareSerial.h>
 
-const byte rxPin = 0;
-const byte txPin = 1;
+#define rxPin 0
+#define txPin 1
 
 // set up a new serial object
 SoftwareSerial serialObject = SoftwareSerial(rxPin, txPin);
 int index;
 String inputString = "";
 boolean stringComplete = false;
+boolean rxPinChange = false;
 
 void setup() {
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   // Set the BAUD rate for the serial communication
   serialObject.begin(9600);
+  serialObject.listen();
   index = 0;
   inputString.reserve(200);
 }
 
 void loop() {
-  // print the string when a newline arrives:
+  read_serial();
   if (stringComplete) {
     serialObject.println(inputString);
     // clear the string:
@@ -28,8 +30,8 @@ void loop() {
   }
 }
 
-void serialEvent() {
-  while (serialObject.available()) {
+void read_serial() {
+  if (serialObject.available()>0){
     // get the new byte:
     char inChar = (char)serialObject.read();
     // add it to the inputString:
