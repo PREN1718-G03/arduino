@@ -1,0 +1,1 @@
+speedUpMotor funktion schreiben und testen
