@@ -47,7 +47,8 @@ float targetDistanceY; //Distance to Target in centimeters
 
 //Funktions Prototypen erstellen
 void rampeMotor(int, int, int);
-void getUltraschallDistance(int pin);
+void getUltraschallDistance(void);
+void printLCD(void);
 
 void setup() {
   // Initialisiere der Ultraschallsensoren
@@ -105,7 +106,8 @@ void loop() {
 	rampeMotor(STEP_DRIVE, 40, 500);
 
 	digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
-
+	getUltraschallDistance();
+	printLCD();
 	rampeMotor(STEP_LIFTMOT, 500, 15);
 	for (int zaehler2 = 0; zaehler2 < (l_stepLiftMot - 2000); zaehler2++) {
 		TOGGLE(STEP_LIFTMOT);
@@ -197,4 +199,40 @@ void rampeMotor(int pin, int startdelay, int enddelay) {
 			TOGGLE(pin);
 		}
 	}
+}
+
+void getUltraschallDistance(void) {
+		TOGGLE(TRIGPIN_X);
+		TOGGLE(TRIGPIN_Y);
+		delayMicroseconds(2000);
+		TOGGLE(TRIGPIN_X);
+		TOGGLE(TRIGPIN_Y);
+		delayMicroseconds(15);
+		TOGGLE(TRIGPIN_X);
+		TOGGLE(TRIGPIN_Y);
+		delayMicroseconds(10);
+
+		pingTimeX = pulseIn(ECHOPIN_X, HIGH);  //pingTime is presented in microceconds
+		pingTimeX = pingTimeX / 1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
+		pingTimeX = pingTimeX / 3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
+		targetDistanceX = SPEED_OF_SOUND * pingTimeX;  //This will be in miles, since speed of sound was miles per hour
+		targetDistanceX = targetDistanceX / 2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
+		targetDistanceX = targetDistanceX * 100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)	
+
+		pingTimeY = pulseIn(ECHOPIN_Y, HIGH);  //pingTime is presented in microceconds
+		pingTimeY = pingTimeY / 1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
+		pingTimeY = pingTimeY / 3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
+		targetDistanceY = SPEED_OF_SOUND * pingTimeY;  //This will be in miles, since speed of sound was miles per hour
+		targetDistanceY = targetDistanceY / 2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
+		targetDistanceY = targetDistanceY * 100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)	
+}
+
+void printLCD(void) {
+	LCD.setCursor(8, 1);   //Set Cursor again to eigth column of second row
+	LCD.print(targetDistanceX, 1); //Print measured distance
+	LCD.print("cm      ");  //Print your units.
+	LCD.setCursor(8, 0);   //Set Cursor again to eigth column of second row
+	LCD.print(targetDistanceY, 1); //Print measured distance
+	LCD.print("cm      ");  //Print your units.
+	delay(1000); //pause to let things settle
 }
