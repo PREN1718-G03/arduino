@@ -1,13 +1,3 @@
-/**
-* Projekt : PREN 2 Gruppe 3
-* Titel : Last Aufheben V 0.1.1
-* Datum : 16.03.18
-* Autor : Jan Odermatt
-* Beschreibung :
-*   Dieses Programm bewegt die Laufkatze bis zur Last, bewegt den Hacken zur Last, 
-*   hebt diese auf und fährt bis zum Endpfosten
-**/
-
 #include <Arduino.h>
 
 #define DIR_DRIVE 3
@@ -17,8 +7,6 @@
 #define START_SWITCH 9 
 #define END_SWITCH 10
 #define STARTSCHLAUFE 13
-
-#define TOGGLE(pin) do{(digitalRead(pin)!= LOW)? digitalWrite(pin, LOW): digitalWrite(pin,HIGH);}while(0)
 
 /*Initialisierung*/
 int l_stepLiftMot = 35000;
@@ -43,46 +31,25 @@ void setup() {
   hasSwitchedFlag = 0;
 }
 
-/*Main Programm*/
 void loop() {
-  while((!hasSwitchedFlag) || !(digitalRead(END_SWITCH))){                          // warte bis Startswitch umgeschaltet wird während endschalter nicht betätigt
-    if(!digitalRead(END_SWITCH)){
-      switch_state = digitalRead(START_SWITCH);
-    }
-    else{
-      if(digitalRead(START_SWITCH) != switch_state){
-        hasSwitchedFlag = 1;
-        switch_state = digitalRead(START_SWITCH);
-      }
-    }
-  }
-  hasSwitchedFlag = 0;
   rampeMotor(STEP_DRIVE, 500, 40);
   for(long zaehler = 0;zaehler <= 78000;zaehler++){ // 70'000 Schritte in X-Richtung
-    TOGGLE(STEP_LIFTMOT);
+    digitalWrite(STEP_DRIVE, HIGH);
     delayMicroseconds(40);
-    TOGGLE(STEP_LIFTMOT);
+    digitalWrite(STEP_DRIVE, LOW);
     delayMicroseconds(40);
   }
   rampeMotor(STEP_DRIVE, 40, 500);
-  
-  digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
-
-  rampeMotor(STEP_LIFTMOT, 500, 15);
-  for(int zaehler2 = 0; zaehler2 < (l_stepLiftMot-2000); zaehler2++){
-    TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(15);
-    TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(15);
-  }
-  rampeMotor(STEP_LIFTMOT, 15, 500);
+  digitalWrite(DIR_DRIVE, HIGH);
   rampeMotor(STEP_DRIVE, 500, 40);
-  while(digitalRead(END_SWITCH)){
-    TOGGLE(STEP_DRIVE);
+  for(long zaehler = 0;zaehler <= 78000;zaehler++){ // 70'000 Schritte in X-Richtung
+    digitalWrite(STEP_DRIVE, HIGH);
     delayMicroseconds(40);
-    TOGGLE(STEP_DRIVE);
+    digitalWrite(STEP_DRIVE, LOW);
     delayMicroseconds(40);
   }
+  rampeMotor(STEP_DRIVE, 40, 500);
+  while(1);
 }
 
 /*
@@ -94,59 +61,59 @@ void rampeMotor(int pin,int startdelay, int enddelay){
   for(int zaehler = 0;zaehler < 1000; zaehler++){
       if(zaehler < 160){
         delayMicroseconds(startdelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 250){
         delayMicroseconds(startdelay - deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 330){
         delayMicroseconds(startdelay - 2*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 2*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 400){
         delayMicroseconds(startdelay - 3*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 3*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 460){
         delayMicroseconds(startdelay - 4*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 4*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 520){
         delayMicroseconds(startdelay - 5*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 5*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 590){
         delayMicroseconds(startdelay - 6*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 6*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 670){
         delayMicroseconds(startdelay - 7*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 7*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 760){
         delayMicroseconds(startdelay - 8*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 8*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else if(zaehler < 860){
         delayMicroseconds(startdelay - 9*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 9*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }else{
         delayMicroseconds(startdelay - 10*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, HIGH);
         delayMicroseconds(startdelay - 10*deltaDelay);
-        TOGGLE(pin);
+        digitalWrite(pin, LOW);
       }
   }
 }
