@@ -6,7 +6,7 @@ int echoPinX=A11;  //Sensor Echo pin connected to Arduino pin A11
 int echoPinY=A9;  //Sensor Echo pin connected to Arduino pin A9
 int trigPinY=A8;  //Sensor Echo pin connected to Arduino pin A8
 int myCounter=0;  //declare your variable myCounter and set to 0
-int servoControlPin=6; //Servo control line is connected to pin 6
+//int servoControlPin=6; //Servo control line is connected to pin 6
 float pingTimeX;  //time for ping to travel from sensor to target and return for x-Axis
 float pingTimeY;  //time for ping to travel from sensor to target and return for y-Axis
 float targetDistanceX; //Distance to Target in centimeters
