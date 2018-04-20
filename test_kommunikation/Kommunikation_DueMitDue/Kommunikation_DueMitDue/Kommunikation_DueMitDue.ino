@@ -1,9 +1,9 @@
 char c = 0;
 void setup() {
  
-  Serial.begin(250000);
-  Serial1.begin(250000);
-  Serial2.begin(250000);
+  Serial.begin(2000000);
+  Serial1.begin(2000000);
+  Serial2.begin(2000000);
 
   Serial2.print("Hoi");
 }
