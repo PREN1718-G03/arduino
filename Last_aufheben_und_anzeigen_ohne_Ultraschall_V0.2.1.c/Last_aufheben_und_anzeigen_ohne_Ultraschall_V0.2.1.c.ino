@@ -13,13 +13,6 @@
 
 // Definition aller Pins
 
-// Ultraschall Pins definieren
-#define TRIGPIN_X A10
-#define ECHOPIN_X A11
-#define TRIGPIN_Y A8
-#define ECHOPIN_Y A9
-#define SPEED_OF_SOUND 1236
-
 // Motor Pins definieren
 #define DIR_DRIVE 3
 #define STEP_DRIVE 4
@@ -52,15 +45,6 @@ void printLCD(void);
 
 void setup() {
 
-  // Initialisiere der Ultraschallsensoren
-  Serial.begin(9600);
-  pinMode(TRIGPIN_X, OUTPUT);
-  digitalWrite(TRIGPIN_X, LOW);
-  pinMode(ECHOPIN_X, INPUT);
-  pinMode(TRIGPIN_Y, OUTPUT);
-  digitalWrite(TRIGPIN_Y, LOW);
-  pinMode(ECHOPIN_Y, INPUT);
-
   // Initialisierung des LCD-Displays
   LCD.begin(16, 2); //Tell Arduino to start your 16 column 2 row LCD
   LCD.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
@@ -89,16 +73,16 @@ void loop() {
 
   Serial.print("\nloop wurde gestartet");
   while ((!hasSwitchedFlag) || !(digitalRead(END_SWITCH))) {                          // warte bis Startswitch umgeschaltet wird während endschalter nicht betätigt
-  	if (!digitalRead(END_SWITCH)) {
-  		switch_state = digitalRead(START_SWITCH);
-  	}
-  	else {
-  		if (digitalRead(START_SWITCH) != switch_state) {
-  			hasSwitchedFlag = 1;
-  			switch_state = digitalRead(START_SWITCH);
-  		}
-  	}
+    if (!digitalRead(END_SWITCH)) {
+      switch_state = digitalRead(START_SWITCH);
     }
+    else {
+      if (digitalRead(START_SWITCH) != switch_state) {
+        hasSwitchedFlag = 1;
+        switch_state = digitalRead(START_SWITCH);
+      }
+    }
+  }
   hasSwitchedFlag = 0;
   rampeMotor(STEP_DRIVE, 500, 40);
   for (long zaehler = 0; zaehler <= 78000; zaehler++) { // 70'000 Schritte in X-Richtung
@@ -110,7 +94,6 @@ void loop() {
   rampeMotor(STEP_DRIVE, 40, 500);
 
   digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
-  getUltraschallDistance();
   rampeMotor(STEP_LIFTMOT, 500, 15);
   for (int zaehler2 = 0; zaehler2 < (l_stepLiftMot - 2000); zaehler2++) {
     TOGGLE(STEP_LIFTMOT);
@@ -120,11 +103,18 @@ void loop() {
   }
   rampeMotor(STEP_LIFTMOT, 15, 500);
   rampeMotor(STEP_DRIVE, 500, 40);
+  myCounter = 0;
   while (digitalRead(END_SWITCH)) {
     TOGGLE(STEP_DRIVE);
     delayMicroseconds(40);
     TOGGLE(STEP_DRIVE);
     delayMicroseconds(40);
+    if (myCounter >= 12000) {
+      myCounter = 0;
+      printLCD();
+    } else {
+      myCounter++;
+    }
   }
 }
 
@@ -204,56 +194,12 @@ void rampeMotor(int pin, int startdelay, int enddelay) {
   }
 }
 
-void getUltraschallDistance(void) {
-  if (!isMeasuringDistance) {
-    isMeasuringDistance = 2;
-    TOGGLE(TRIGPIN_X);
-    TOGGLE(TRIGPIN_Y);
-  }
-}
-
-void timer2msHandler(void) {
-  if (isMeasuringDistance == 2) {
-    TOGGLE(TRIGPIN_X);
-    TOGGLE(TRIGPIN_Y);
-  }
-  else {
-    isMeasuringDistance = 0;
-  }
-  Serial.print("\nDer Timer wurden ausgeführt code 1");
-}
-
-void timer15usHandler(void) {
-  TOGGLE(TRIGPIN_X);
-  TOGGLE(TRIGPIN_Y);
-  Serial.print("\nDer Timer wurden ausgeführt code 2");
-}
-
-void timer10usHandler(void) {
-  pingTimeX = pulseIn(ECHOPIN_X, HIGH);  //pingTime is presented in microceconds
-  pingTimeX = pingTimeX / 1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
-  pingTimeX = pingTimeX / 3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
-  targetDistanceX = SPEED_OF_SOUND * pingTimeX;  //This will be in miles, since speed of sound was miles per hour
-  targetDistanceX = targetDistanceX / 2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
-  targetDistanceX = targetDistanceX * 100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
-
-  pingTimeY = pulseIn(ECHOPIN_Y, HIGH);  //pingTime is presented in microceconds
-  pingTimeY = pingTimeY / 1000000; //convert pingTime to seconds by dividing by 1000000 (microseconds in a second)
-  pingTimeY = pingTimeY / 3600; //convert pingtime to hourse by dividing by 3600 (seconds in an hour)
-  targetDistanceY = SPEED_OF_SOUND * pingTimeY;  //This will be in miles, since speed of sound was miles per hour
-  targetDistanceY = targetDistanceY / 2; //Remember ping travels to target and back from target, so you must divide by 2 for actual target distance.
-  targetDistanceY = targetDistanceY * 100000;    //Convert miles to cm by multipling by 160934.4 (cm per mile)
-  printLCD();
-  Serial.print("\nDer Timer wurden ausgeführt code 3");
-}
-
 void printLCD(void) {
   LCD.setCursor(8, 1);   //Set Cursor again to eigth column of second row
-  LCD.print(targetDistanceX, 1); //Print measured distance
+  LCD.print(2000, 1); //Print measured distance
   LCD.print("cm      ");  //Print your units.
   LCD.setCursor(8, 0);   //Set Cursor again to eigth column of second row
-  LCD.print(targetDistanceY, 1); //Print measured distance
+  LCD.print(2000, 1); //Print measured distance
   LCD.print("cm      ");  //Print your units.
-  isMeasuringDistance = 1;
   delayMicroseconds(1000);
 }
