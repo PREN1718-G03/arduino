@@ -5,7 +5,7 @@ void setup() {
   Serial1.begin(250000);
   Serial2.begin(250000);
 
-  Serial2.print("Hoi");
+  Serial2.print("HelloJanOdermatt");
 }
 
 
@@ -23,5 +23,5 @@ void loop() {
     Serial2.print(s);
   }
   
-  delay(1);
+  delay(1000);
 }
