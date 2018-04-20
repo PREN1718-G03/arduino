@@ -43,24 +43,14 @@ float pingTimeX;  //time for ping to travel from sensor to target and return for
 float pingTimeY;  //time for ping to travel from sensor to target and return for y-Axis
 float targetDistanceX; //Distance to Target in centimeters
 float targetDistanceY; //Distance to Target in centimeters
-//DueTimer Timer1 = DueTimer(0);
-//DueTimer Timer2 = DueTimer(1);
-//DueTimer Timer3 = DueTimer(2);
 
 
 //Funktions Prototypen erstellen
 void rampeMotor(int, int, int);
 void getUltraschallDistance(void);
-void timer2msHandler(void);
-void timer15usHandler(void);
-void timer10usHandler(void);
 void printLCD(void);
 
 void setup() {
-  // Initialisierung der Timer
-  Timer1.attachInterrupt(timer2msHandler).setPeriod(2).stop();
-  Timer2.attachInterrupt(timer15usHandler).setFrequency(66667).stop();
-  Timer3.attachInterrupt(timer10usHandler).setFrequency(100000).stop();
 
   // Initialisiere der Ultraschallsensoren
   Serial.begin(9600);
@@ -219,8 +209,6 @@ void getUltraschallDistance(void) {
     isMeasuringDistance = 2;
     TOGGLE(TRIGPIN_X);
     TOGGLE(TRIGPIN_Y);
-    Serial.print("\nTimer werden gestartet");
-    //Timer1.start();
   }
 }
 
