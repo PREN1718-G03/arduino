@@ -1,4 +1,3 @@
-
 char c = 0;
 void setup() {
  
@@ -6,7 +5,7 @@ void setup() {
   Serial1.begin(250000);
   Serial2.begin(250000);
 
-  Serial2.print("Hello");
+  Serial2.print("Hoi");
 }
 
 
@@ -24,5 +23,5 @@ void loop() {
     Serial2.print(s);
   }
   
-  delay(1000);
+  delay(1);
 }
