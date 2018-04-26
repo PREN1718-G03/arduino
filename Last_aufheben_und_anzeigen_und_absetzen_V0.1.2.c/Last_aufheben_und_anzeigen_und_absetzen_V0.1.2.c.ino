@@ -27,7 +27,7 @@
 
 // Initialisierung
 LiquidCrystal LCD(48, 49, 50, 51, 52, 53);	// Kreiere LCD Objekt
-int l_stepLiftMot = 35000;
+int l_stepLiftMot = 33000;
 short switch_state;
 short hasSwitchedFlag = 0;
 int myCounter = 0;
@@ -40,7 +40,6 @@ float targetDistanceY; //Distance to Target in centimeters
 
 //Funktions Prototypen erstellen
 void rampeMotor(int, int, int);
-void getUltraschallDistance(void);
 void printLCD(void);
 
 void setup() {
@@ -83,19 +82,20 @@ void loop() {
       }
     }
   }
+  delay(4000);
   hasSwitchedFlag = 0;
   rampeMotor(STEP_DRIVE, 500, 40);
   for (long zaehler = 0; zaehler <= 78000; zaehler++) { // 70'000 Schritte in X-Richtung
-    TOGGLE(STEP_LIFTMOT);
+    TOGGLE(STEP_DRIVE);
     delayMicroseconds(40);
-    TOGGLE(STEP_LIFTMOT);
+    TOGGLE(STEP_DRIVE);
     delayMicroseconds(40);
   }
   rampeMotor(STEP_DRIVE, 40, 500);
 
   digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
   rampeMotor(STEP_LIFTMOT, 500, 15);
-  for (int zaehler2 = 0; zaehler2 < (l_stepLiftMot - 2000); zaehler2++) {
+  for (int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++) {
     TOGGLE(STEP_LIFTMOT);
     delayMicroseconds(15);
     TOGGLE(STEP_LIFTMOT);
@@ -103,8 +103,39 @@ void loop() {
   }
   rampeMotor(STEP_LIFTMOT, 15, 500);
   rampeMotor(STEP_DRIVE, 500, 40);
+
+  for(int zaehler2 = 0; zaehler2 < 60000; zaehler2++){ //Einige Schritte nach vorne fahren
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(40);
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(40);
+  }
+  rampeMotor(STEP_DRIVE, 40, 500);
+  TOGGLE(DIR_LIFTMOT);
+  rampeMotor(STEP_LIFTMOT, 500, 15);
+  l_stepLiftMot += 9000;
+  for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){ // Last auf Boden fahren
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(15);
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(15);
+  }
+  rampeMotor(STEP_LIFTMOT, 15, 500);
+  
+  TOGGLE(DIR_LIFTMOT);
+
+  rampeMotor(STEP_LIFTMOT, 500, 15);
+  for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){    //Hacken anheben
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(15);
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(15);
+  }
+  rampeMotor(STEP_LIFTMOT, 15, 500);
+  
   myCounter = 0;
-  while (digitalRead(END_SWITCH)) {
+  rampeMotor(STEP_DRIVE, 500, 40);  
+  while (digitalRead(END_SWITCH)) {       //an Endpfosten fahren
     TOGGLE(STEP_DRIVE);
     delayMicroseconds(40);
     TOGGLE(STEP_DRIVE);
