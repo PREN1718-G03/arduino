@@ -19,6 +19,8 @@ void setup_arduino_due() {
 }
 
 void loop() {
+	sendData_uno();
+	// sendData_due();
   delay(500);
 }
 
