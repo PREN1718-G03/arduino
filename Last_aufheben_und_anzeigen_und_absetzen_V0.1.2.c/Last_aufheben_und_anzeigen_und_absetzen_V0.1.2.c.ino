@@ -9,7 +9,9 @@
 	Während dessen zeigt das LCD-Display ständig die Position der Last an.
 **/
 #include <Arduino.h>
-#include <LiquidCrystal.h>
+#include <Wire.h>
+#include <LiquidCrystal_PCF8574.h>
+
 
 // Definition aller Pins
 
@@ -21,13 +23,15 @@
 #define START_SWITCH 9
 #define END_SWITCH 10
 #define STARTSCHLAUFE 13
+#define LIFT_DELAY 40
+#define DRIVE_DELAY 35
 
 // Makros definieren
 #define TOGGLE(x); digitalWrite(x, digitalRead(x) ? LOW : HIGH)
 
 // Initialisierung
-LiquidCrystal LCD(48, 49, 50, 51, 52, 53);	// Kreiere LCD Objekt
-int l_stepLiftMot = 35000;
+LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+int l_stepLiftMot = 33000;
 short switch_state;
 short hasSwitchedFlag = 0;
 int myCounter = 0;
@@ -39,18 +43,28 @@ float targetDistanceY; //Distance to Target in centimeters
 
 
 //Funktions Prototypen erstellen
+//void stepWhileDelay(int, int, int);
 void rampeMotor(int, int, int);
-void getUltraschallDistance(void);
-void printLCD(void);
+void printLCD(int, int);
 
 void setup() {
 
-  // Initialisierung des LCD-Displays
-  LCD.begin(16, 2); //Tell Arduino to start your 16 column 2 row LCD
-  LCD.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
-  LCD.print("z-Achse");  //Print Message on First Row
-  LCD.setCursor(0, 1);  //Set cursor to first column of second row
-  LCD.print("x-Achse"); //Print blanks to clear the row
+  // Initialisierung des LCD-Display
+  Serial.begin(115200);
+  Serial.println("LCD...");
+
+  while (! Serial);
+
+  Serial.println("Dose: check for LCD");
+
+  // See http://playground.arduino.cc/Main/I2cScanner
+  Wire.begin();
+  lcd.setBacklight(255);
+  lcd.begin(16, 2); // initialize the lcd
+  lcd.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
+  lcd.print("z-Achse");  //Print Message on First Row
+  lcd.setCursor(0, 1);  //Set cursor to first column of second row
+  lcd.print("x-Achse"); //Print blanks to clear the row
 
   // Initialisiere Motor Pins
   pinMode(DIR_DRIVE, OUTPUT);
@@ -70,8 +84,7 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
-
-  Serial.print("\nloop wurde gestartet");
+  printLCD(1100,1010);
   while ((!hasSwitchedFlag) || !(digitalRead(END_SWITCH))) {                          // warte bis Startswitch umgeschaltet wird während endschalter nicht betätigt
     if (!digitalRead(END_SWITCH)) {
       switch_state = digitalRead(START_SWITCH);
@@ -83,35 +96,68 @@ void loop() {
       }
     }
   }
+  printLCD(2022,2020);
+  delay(4000);
   hasSwitchedFlag = 0;
-  rampeMotor(STEP_DRIVE, 500, 40);
-  for (long zaehler = 0; zaehler <= 78000; zaehler++) { // 70'000 Schritte in X-Richtung
-    TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(40);
-    TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(40);
+  rampeMotor(STEP_DRIVE, 500, DRIVE_DELAY);
+  for (long zaehler = 0; zaehler <= 100000; zaehler++) { // 100'000 Schritte in X-Richtung
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(DRIVE_DELAY);
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(DRIVE_DELAY);
   }
-  rampeMotor(STEP_DRIVE, 40, 500);
+  rampeMotor(STEP_DRIVE, DRIVE_DELAY, 500);
 
   digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
-  rampeMotor(STEP_LIFTMOT, 500, 15);
-  for (int zaehler2 = 0; zaehler2 < (l_stepLiftMot - 2000); zaehler2++) {
+  rampeMotor(STEP_LIFTMOT, 500, LIFT_DELAY);
+  for (int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++) {
     TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(15);
+    delayMicroseconds(LIFT_DELAY);
     TOGGLE(STEP_LIFTMOT);
-    delayMicroseconds(15);
+    delayMicroseconds(LIFT_DELAY);
   }
-  rampeMotor(STEP_LIFTMOT, 15, 500);
-  rampeMotor(STEP_DRIVE, 500, 40);
+  rampeMotor(STEP_LIFTMOT, 40, 500);
+  rampeMotor(STEP_DRIVE, 500, 35);
+
+  for(int zaehler2 = 0; zaehler2 < 90000; zaehler2++){ //Einige Schritte nach vorne fahren
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(35);
+    TOGGLE(STEP_DRIVE);
+    delayMicroseconds(35);
+  }
+  rampeMotor(STEP_DRIVE, 35, 500);
+  TOGGLE(DIR_LIFTMOT);
+  rampeMotor(STEP_LIFTMOT, 500, LIFT_DELAY);
+  l_stepLiftMot += 4000;
+  for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){ // Last auf Boden fahren
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(LIFT_DELAY);
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(LIFT_DELAY);
+  }
+  rampeMotor(STEP_LIFTMOT, LIFT_DELAY, 500);
+  
+  TOGGLE(DIR_LIFTMOT);
+
+  rampeMotor(STEP_LIFTMOT, 500, LIFT_DELAY);
+  for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){    //Hacken anheben
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(LIFT_DELAY);
+    TOGGLE(STEP_LIFTMOT);
+    delayMicroseconds(LIFT_DELAY);
+  }
+  rampeMotor(STEP_LIFTMOT, LIFT_DELAY, 500);
+  
   myCounter = 0;
-  while (digitalRead(END_SWITCH)) {
+  rampeMotor(STEP_DRIVE, 500, DRIVE_DELAY);  
+  while (digitalRead(END_SWITCH)) {       //an Endpfosten fahren
     TOGGLE(STEP_DRIVE);
-    delayMicroseconds(40);
+    delayMicroseconds(DRIVE_DELAY);
     TOGGLE(STEP_DRIVE);
-    delayMicroseconds(40);
+    delayMicroseconds(DRIVE_DELAY);
     if (myCounter >= 12000) {
       myCounter = 0;
-      printLCD();
+      printLCD(2000,2000);
     } else {
       myCounter++;
     }
@@ -194,12 +240,19 @@ void rampeMotor(int pin, int startdelay, int enddelay) {
   }
 }
 
-void printLCD(void) {
-  LCD.setCursor(8, 1);   //Set Cursor again to eigth column of second row
-  LCD.print(2000, 1); //Print measured distance
-  LCD.print("cm      ");  //Print your units.
-  LCD.setCursor(8, 0);   //Set Cursor again to eigth column of second row
-  LCD.print(2000, 1); //Print measured distance
-  LCD.print("cm      ");  //Print your units.
-  delayMicroseconds(1000);
+/*stepWhileDelay(int stepPin, int delayMicrosecs, int motorDelayMicroseconds){
+  int counter = delayMicrosecs / motorDelayMicroseconds;
+  for(int z = 0; z < counter; z++){
+    delayMicroseconds(motorDelayMicroseconds);
+    TOGGLE(stepPin);
+  }
+}*/
+
+void printLCD(int xAxis, int zAxis) {
+  lcd.setCursor(8, 1);   //Set Cursor again to eigth column of second row
+  lcd.print(xAxis, 1); //Print measured distance
+  lcd.print("cm      ");  //Print your units.
+  lcd.setCursor(8, 0);   //Set Cursor again to eigth column of second row
+  lcd.print(zAxis, 1); //Print measured distance
+  lcd.print("cm      ");  //Print your units.
 }
