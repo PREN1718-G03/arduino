@@ -7,6 +7,8 @@ int distanceToTarget = 0;
 
 
 void setup() {
+  setup_arduino_uno();
+  // setup_arduino_due();
 }
 
 void setup_arduino_uno() {
@@ -19,8 +21,8 @@ void setup_arduino_due() {
 }
 
 void loop() {
-	sendData_uno();
-	// sendData_due();
+  sendData_uno();
+  // sendData_due();
   delay(500);
 }
 
@@ -51,6 +53,8 @@ void sendData_uno() {
     Serial.print(distanceToPillar, DEC);
     Serial.print("Distance to target: ");
     Serial.println(distanceToTarget, DEC);
+    receivedData = false;
+    sentCommand = false;
   }
 }
 
@@ -81,5 +85,7 @@ void sendData_due() {
     Serial.print(distanceToPillar, DEC);
     Serial.print("Distance to target: ");
     Serial.println(distanceToTarget, DEC);
+    receivedData = false;
+    sentCommand = false;
   }
 }
