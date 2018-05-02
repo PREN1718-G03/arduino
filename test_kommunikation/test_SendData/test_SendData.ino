@@ -15,11 +15,6 @@ void setup_arduino_uno() {
   Serial.begin(9600);
 }
 
-void setup_arduino_due() {
-  Serial.begin(9600);
-  Serial1.begin(9600);
-}
-
 void loop() {
   sendData_uno();
   // sendData_due();
@@ -49,9 +44,9 @@ void sendData_uno() {
   if (receivedData) {
     Serial.print("Height: ");
     Serial.print(height, DEC);
-    Serial.print("Distance to pillar: ");
+    Serial.print(" Distance to pillar: ");
     Serial.print(distanceToPillar, DEC);
-    Serial.print("Distance to target: ");
+    Serial.print(" Distance to target: ");
     Serial.println(distanceToTarget, DEC);
     receivedData = false;
     sentCommand = false;
