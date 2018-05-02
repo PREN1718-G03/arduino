@@ -24,7 +24,7 @@ void loop() {
 void sendData_uno() {
   if (!sentCommand) {
     // Flush the read queue
-    while (Serial.available > 0) {
+    while (Serial.available() > 0) {
         Serial.read();
     }
     Serial.println("SendData");
