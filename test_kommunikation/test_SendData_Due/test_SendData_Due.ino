@@ -12,21 +12,22 @@ void setup() {
 
 void setup_arduino_due() {
   Serial1.begin(9600);
+  Serial.begin(9600);
 }
 
 void loop() {
-  sendData_uno();
-  // sendData_due();
-  delay(500);
+  // sendData_uno();
+  sendData_due();
+  delay(1000);
 }
 
 void sendData_due() {
     if (!sentCommand) {
     // Flush the read queue
-    while (Serial1.available > 0) {
+    while (Serial1.available() > 0) {
         Serial1.read();
     }
-    Serial1.println("SendData");
+    Serial.println("SendData");
     sentCommand = true;
   }
   if (Serial1.available() > 0) {
