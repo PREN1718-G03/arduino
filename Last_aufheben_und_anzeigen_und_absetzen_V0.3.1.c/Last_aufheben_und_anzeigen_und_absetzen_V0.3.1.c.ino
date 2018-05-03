@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_PCF8574.h>
+#include <DueTimer.h>
 
 
 // Definition aller Pins
@@ -26,6 +27,8 @@
 #define LIFT_DELAY 40
 #define DRIVE_DELAY 35
 #define ZERO_STEP 100000
+#define DRIVE_TRANSMISSION 75 // Miktroschritte pro mm
+#define LIFT_TRANSMISSION 60  // Miktroschritte pro mm
 
 // Makros definieren
 #define TOGGLE(x); digitalWrite(x, digitalRead(x) ? LOW : HIGH)
@@ -45,13 +48,16 @@ float targetDistanceX; //Distance to Target in centimeters
 float targetDistanceY; //Distance to Target in centimeters
 long driveStepCounter = -ZERO_STEP;
 long liftStepCounter = 0;
-
+float xAxis;
+float zAxis;
 
 //Funktions Prototypen erstellen
 //void stepWhileDelay(int, int, int);
 void rampeMotor(int, int, int);
 void printLCD(int, int);
 void stepMotor(int);
+void timerHandler(void);
+void calcAxis(void);
 
 void setup() {
 
@@ -65,6 +71,8 @@ void setup() {
 
   // See http://playground.arduino.cc/Main/I2cScanner
   Wire.begin();
+  Timer3.attachInterrupt(timerHandler);
+  Timer3.start(500000);   //alle 500ms aufrufen
   lcd.setBacklight(255);
   lcd.begin(16, 2); // initialize the lcd
   lcd.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
@@ -90,7 +98,7 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
-  printLCD(driveStepCounter/6000,liftStepCounter/6000);
+  //printLCD(driveStepCounter/6000,liftStepCounter/6000);
   Serial.println("lcd wurde ausgegeben");
   while ((!hasSwitchedFlag) || !(digitalRead(END_SWITCH))) {                          // warte bis Startswitch umgeschaltet wird während endschalter nicht betätigt
     if (!digitalRead(END_SWITCH)) {
@@ -111,7 +119,7 @@ void loop() {
     stepMotor(STEP_DRIVE, DRIVE_DELAY);
   }
   rampeMotor(STEP_DRIVE, DRIVE_DELAY, 500);
-  printLCD(driveStepCounter/6000,liftStepCounter/6000);
+  //printLCD(driveStepCounter/6000,liftStepCounter/6000);
   digitalWrite(DIR_LIFTMOT, LOW);                   // Richtung in Z-Achse
   rampeMotor(STEP_LIFTMOT, 500, LIFT_DELAY);
   for (int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++) {
@@ -123,7 +131,7 @@ void loop() {
   for(int zaehler2 = 0; zaehler2 < 90000; zaehler2++){ //Einige Schritte nach vorne fahren
     stepMotor(STEP_DRIVE, DRIVE_DELAY);
   }
-  printLCD(driveStepCounter/6000,liftStepCounter/6000);
+  //printLCD(driveStepCounter/6000,liftStepCounter/6000);
   rampeMotor(STEP_DRIVE, 35, 500);
   TOGGLE(DIR_LIFTMOT);
   rampeMotor(STEP_LIFTMOT, 500, LIFT_DELAY);
@@ -131,7 +139,7 @@ void loop() {
   for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){ // Last auf Boden fahren
     stepMotor(STEP_LIFTMOT, LIFT_DELAY);
   }
-  printLCD(driveStepCounter/6000,liftStepCounter/6000);
+  //printLCD(driveStepCounter/6000,liftStepCounter/6000);
   rampeMotor(STEP_LIFTMOT, LIFT_DELAY, 500);
   
   TOGGLE(DIR_LIFTMOT);
@@ -140,7 +148,7 @@ void loop() {
   for(int zaehler2 = 0; zaehler2 < l_stepLiftMot; zaehler2++){    //Hacken anheben
     stepMotor(STEP_LIFTMOT, LIFT_DELAY);
   }
-  printLCD(driveStepCounter/6000,liftStepCounter/6000);
+  //printLCD(driveStepCounter/6000,liftStepCounter/6000);
   rampeMotor(STEP_LIFTMOT, LIFT_DELAY, 500);
   
   myCounter = 0;
@@ -149,7 +157,7 @@ void loop() {
     stepMotor(STEP_DRIVE, DRIVE_DELAY);
     if (myCounter >= 12000) {
       myCounter = 0;
-      printLCD(driveStepCounter/6000,liftStepCounter/6000);
+      //printLCD(driveStepCounter/6000,liftStepCounter/6000);
     } else {
       myCounter++;
     }
@@ -235,3 +243,14 @@ void printLCD(int xAxis, int zAxis) {
   lcd.print(zAxis, 1); //Print measured distance
   lcd.print("cm      ");  //Print your units.
 }
+
+void calcAxis(){
+  xAxis = (float)driveStepCounter/DRIVE_TRANSMISSION;
+  zAxis = (float)liftStepCounter/LIFT_TRANSMISSION;
+}
+
+void timerHandler(){
+  calcAxis();
+  printLCD(xAxis, zAxis);
+}
+
