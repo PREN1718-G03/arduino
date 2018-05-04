@@ -46,7 +46,7 @@ float pingTimeX;  //time for ping to travel from sensor to target and return for
 float pingTimeY;  //time for ping to travel from sensor to target and return for y-Axis
 float targetDistanceX; //Distance to Target in centimeters
 float targetDistanceY; //Distance to Target in centimeters
-long driveStepCounter = -ZERO_STEP;
+long driveStepCounter = -ZERO_STEP-2000;
 long liftStepCounter = 0;
 float xAxis;
 float zAxis;
@@ -72,13 +72,13 @@ void setup() {
   // See http://playground.arduino.cc/Main/I2cScanner
   Wire.begin();
   Timer3.attachInterrupt(timerHandler);
-  Timer3.start(500000);   //alle 500ms aufrufen
+  Timer3.start(1000000);   //alle 500ms aufrufen
   lcd.setBacklight(255);
   lcd.begin(16, 2); // initialize the lcd
   lcd.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
-  lcd.print("z-Achse");  //Print Message on First Row
+  lcd.print("x-Achse");  //Print Message on First Row
   lcd.setCursor(0, 1);  //Set cursor to first column of second row
-  lcd.print("x-Achse"); //Print blanks to clear the row
+  lcd.print("z-Achse"); //Print blanks to clear the row
   Serial.println("lcd wurde initialisiert");
   // Initialisiere Motor Pins
   pinMode(DIR_DRIVE, OUTPUT);
@@ -235,18 +235,18 @@ void stepMotor(int stepPin, int delayTime){
   }
 }*/
 
-void printLCD(int xAxis, int zAxis) {
+void printLCD(float xAxis, float zAxis) {
   lcd.setCursor(8, 1);   //Set Cursor again to eigth column of second row
-  lcd.print(xAxis, 1); //Print measured distance
+  lcd.print(zAxis, 1); //Print measured distance
   lcd.print("cm      ");  //Print your units.
   lcd.setCursor(8, 0);   //Set Cursor again to eigth column of second row
-  lcd.print(zAxis, 1); //Print measured distance
+  lcd.print(xAxis, 1); //Print measured distance
   lcd.print("cm      ");  //Print your units.
 }
 
 void calcAxis(){
-  xAxis = (float)driveStepCounter/DRIVE_TRANSMISSION;
-  zAxis = (float)liftStepCounter/LIFT_TRANSMISSION;
+  xAxis = (float)driveStepCounter/(10 * DRIVE_TRANSMISSION);  //Schritte in cm umwandeln
+  zAxis = (float)liftStepCounter/(10 * LIFT_TRANSMISSION);    //Schritte in cm umwandeln
 }
 
 void timerHandler(){
