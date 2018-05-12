@@ -19,14 +19,14 @@
 // Motor Pins definieren
 #define DIR_DRIVE 3
 #define STEP_DRIVE 4
-#define DIR_LIFTMOT 5
-#define STEP_LIFTMOT 6
+#define DIR_LIFT 5
+#define STEP_LIFT 6
 #define START_SWITCH 9
 #define END_SWITCH 10
 #define STARTSCHLAUFE 13
-#define LIFT_DELAY 10000
-#define DRIVE_DELAY 600
-#define ZERO_STEP 100000
+#define LIFT_DELAY 6000
+#define DRIVE_DELAY 6000
+#define ZERO_STEP 102000
 #define DRIVE_TRANSMISSION (72.3825877 / 16)//2.3579 // Vollschritte pro mm
 #define LIFT_TRANSMISSION  (52.5086788 / 16)//102.85946673 // Vollschritte pro mm
 
@@ -92,9 +92,9 @@ void setup() {
   pinMode(DIR_DRIVE, OUTPUT);
   digitalWrite(DIR_DRIVE, HIGH);
   pinMode(STEP_DRIVE, OUTPUT);
-  pinMode(DIR_LIFTMOT, OUTPUT);
-  digitalWrite(DIR_LIFTMOT, LOW);
-  pinMode(STEP_LIFTMOT, OUTPUT);
+  pinMode(DIR_LIFT, OUTPUT);
+  digitalWrite(DIR_LIFT, LOW);
+  pinMode(STEP_LIFT, OUTPUT);
   pinMode(START_SWITCH, INPUT_PULLUP);
   pinMode(END_SWITCH, INPUT_PULLUP);
   digitalWrite(START_SWITCH, HIGH);       // turn on pullup resistors
@@ -106,30 +106,28 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
-  /*startMotor(true, DRIVE_DELAY);
-  while(1){
-    if(!digitalRead(END_SWITCH)){
-      stopMotor(true);
-    }
-  }*/
-  stopMotor(true);
-  stopMotor(false);
-  TOGGLE(DIR_DRIVE);
-  TOGGLE(DIR_LIFTMOT);
-  delay(5000);
-  startMotor(false, LIFT_DELAY);
+//  stopMotor(true);
+//  stopMotor(false);
+//  TOGGLE(DIR_DRIVE);
+//  TOGGLE(DIR_LIFTMOT);
+//  delay(5000);
+//  startMotor(false, LIFT_DELAY);
+//  startMotor(true, DRIVE_DELAY);
+//  delay(5000);
+//  stopMotor(true);
+//  stopMotor(false);
+//  TOGGLE(DIR_DRIVE);
+//  TOGGLE(DIR_LIFTMOT);
+//  delay(5000);
+//  startMotor(true, DRIVE_DELAY);
+//  startMotor(false, LIFT_DELAY);
+//  delay(5000);
+//  Serial.println(xMax);
+//  Serial.println(zMax);
   startMotor(true, DRIVE_DELAY);
-  delay(5000);
+  delay(6000);
   stopMotor(true);
-  stopMotor(false);
-  TOGGLE(DIR_DRIVE);
-  TOGGLE(DIR_LIFTMOT);
-  delay(5000);
-  startMotor(true, DRIVE_DELAY);
   startMotor(false, LIFT_DELAY);
-  delay(5000);
-  Serial.println(xMax);
-  Serial.println(zMax);
 }
 
 /*
@@ -176,11 +174,17 @@ void loop() {
 }*/
 
 void startMotor(int isDrive, int delayTime){
-      if(isDrive){
-        Timer2.start(delayTime);
-      }else{
-        Timer1.start(delayTime);
+      if(digitalRead(END_SWITCH)){
+        if(isDrive){
+          Timer2.start(delayTime);
+        }else{
+          Timer1.start(delayTime);
+        }
       }
+      else{
+        Serial.println("Endswitch pressed");
+      }
+      
 }
 
 void stopMotor(int isDrive){
@@ -226,7 +230,6 @@ void calcAxis(){
 }
 
 void timer3Handler(){
-  calcAxis();
   printLCD(xAxis, zAxis);
 }
 
@@ -235,22 +238,28 @@ void timer2Handler(void){
   TOGGLE(STEP_DRIVE);
   if(digitalRead(STEP_DRIVE)){
     if(digitalRead(DIR_DRIVE)){
-          driveStepCounter--;
-        }else{
-          driveStepCounter++;
-        }
+      driveStepCounter--;
+    }else{
+      driveStepCounter++;
+    }
+    calcAxis();
   }
 }
 
 
 void timer1Handler(void){
   TOGGLE(STEP_LIFTMOT);
-  if(digitalRead(STEP_LIFTMOT)){
-    if(digitalRead(DIR_LIFTMOT)){
+  if(digitalRead(STEP_LIFT)){
+    if(digitalRead(DIR_LIFT)){
           liftStepCounter--;
         }else{
           liftStepCounter++;
         }
   }
+}
+
+void stopInterrupt(void){
+  Serial.println("Das Programm wurde angehalten.");
+  while(1);
 }
 
