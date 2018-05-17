@@ -25,21 +25,17 @@
 #define LIFT_FREQUENCY 200
 #define DRIVE_FREQUENCY 200
 #define CARGO_START_DISTANCE_MM 750
-#define DRIVE_TRANSMISSION (72.3825877 / 16)//2.3579 // Vollschritte pro mm
-#define LIFT_TRANSMISSION  (52.5086788 / 16)//102.85946673 // Vollschritte pro mm
-
-// Makros definieren
-//#define TOGGLE(x); digitalWrite(x, digitalRead(x) ? LOW : HIGH)
+#define DRIVE_TRANSMISSION (72.3825877 / 16)//2.3579 // schritte pro mm
+#define LIFT_TRANSMISSION  (52.5086788 / 16)//102.85946673 // schritte pro mm
 
 // Initialisierung
 
-
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 int l_stepLiftMot = 33000;
-long driveStepCounter = 0;
-long liftStepCounter = 0;
-double xAxis;
-double zAxis;
+int distanceMemory = 0;
+double xAxis = ((double)CARGO_START_DISTANCE_MM) / 10;
+double zAxis = 0;
+int hightList[35] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 DuePWM pwm( LIFT_FREQUENCY, DRIVE_FREQUENCY );
 
 void setup() {
@@ -56,7 +52,8 @@ void setup() {
   Wire.begin();
   Timer3.attachInterrupt(printLCD);
   Timer3.start(1000000);   //jede Sekunde aufrufen
-
+  Timer2.attachInterrupt(catchDriveStepTimer);
+  Timer1.attachInterrupt(catchLiftStepTimer);
   lcd.setBacklight(255);
   lcd.begin(16, 2); // initialize the lcd
   lcd.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
@@ -79,15 +76,36 @@ void setup() {
 /*Main Programm*/
 void loop() {
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  while(true);
+  moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM/10)/10)]);
+  if(!digitalRead(STOP_SWITCH)){
+    while(1);
+  }
 }
 
 void moveDriveDistance(int mm_Distance) {
+  distanceMemory = mm_Distance;
   pwm.pinFreq2(DRIVE_STEP);
   pwm.pinDuty(DRIVE_STEP, 127);
+  //Umrechnung von s in us
+  Timer2.start(1000000 * mm_Distance * DRIVE_TRANSMISSION / DRIVE_FREQUENCY);
 }
 
-void moveLiftDistance(int mm_Hight) {}
+void moveLiftDistance(int mm_Hight) {
+  distanceMemory = mm_Hight;
+  pwm.pinFreq2(DRIVE_STEP);
+  pwm.pinDuty(DRIVE_STEP, 127);
+  Timer1.start(1000000 * mm_Hight * LIFT_TRANSMISSION / LIFT_FREQUENCY);
+}
+
+void catchDriveStepTimer(){
+  xAxis += (double)distanceMemory * 10 * cos(0.1418970);
+  pwm.stop(DRIVE_STEP);
+}
+
+void catchLiftStepTimer(){
+  zAxis += distanceMemory * 10;
+  pwm.stop(LIFT_STEP);
+}
 
 void printLCD() {
     lcd.setCursor(8, 0);    //Set Cursor again to eigth column of second row
@@ -96,15 +114,5 @@ void printLCD() {
     lcd.setCursor(8, 1);    //Set Cursor again to eigth column of second row
     lcd.print(zAxis, 1);    //Print measured distance
     lcd.print("cm      ");  //Print your units.
-}
-
-void calcAxis() {
-  xAxis = driveStepCounter / (10 * DRIVE_TRANSMISSION); //Schritte in cm umwandeln
-  zAxis = liftStepCounter / (10 * LIFT_TRANSMISSION);  //Schritte in cm umwandeln
-}
-
-void stopInterrupt(void) {
-  Serial.println("Das Programm wurde angehalten.");
-  while (1);
 }
 
