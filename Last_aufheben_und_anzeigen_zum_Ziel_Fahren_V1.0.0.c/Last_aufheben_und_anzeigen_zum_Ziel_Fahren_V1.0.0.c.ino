@@ -31,12 +31,20 @@
 // Initialisierung
 
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
-int l_stepLiftMot = 33000;
+bool isDriving = false;
 int distanceMemory = 0;
 double xAxis = ((double)CARGO_START_DISTANCE_MM) / 10;
 double zAxis = 0;
-int hightList[35] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+int hightList[35] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 DuePWM pwm( LIFT_FREQUENCY, DRIVE_FREQUENCY );
+
+//Initialisierung Kommunikation
+bool sentCommand = false;
+bool receivedData = false;
+char incomingByte = 0;
+int height = 0;
+int distanceToPillar = 0;
+int distanceToTarget = 0;
 
 void setup() {
 
@@ -47,6 +55,8 @@ void setup() {
   while (! Serial);
 
   Serial.println("Dose: check for LCD");
+
+  Serial1.begin(9600);    //Kommunikation via Rx1 Tx1
 
   // See http://playground.arduino.cc/Main/I2cScanner
   Wire.begin();
@@ -76,14 +86,31 @@ void setup() {
 /*Main Programm*/
 void loop() {
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM/10)/10)]);
-  if(!digitalRead(STOP_SWITCH)){
-    while(1);
+  moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] - 100);
+  while (digitalRead(STOP_SWITCH)) {
+    getPiData();
+    if (distanceToTarget > 0) {
+      moveDriveDistance(distanceToTarget);
+      while (isDriving);
+      moveLiftDistance(-hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] + 100);
+      moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] - 100);
+      break;
+    }
+    else{
+      moveDriveDistance(500);
+    }
   }
 }
 
 void moveDriveDistance(int mm_Distance) {
+  isDriving = true;
   distanceMemory = mm_Distance;
+  if (mm_Distance > 0) {
+    digitalWrite(DRIVE_DIR, true);
+  }
+  else {
+    digitalWrite(DRIVE_DIR, false);
+  }
   pwm.pinFreq2(DRIVE_STEP);
   pwm.pinDuty(DRIVE_STEP, 127);
   //Umrechnung von s in us
@@ -91,28 +118,69 @@ void moveDriveDistance(int mm_Distance) {
 }
 
 void moveLiftDistance(int mm_Hight) {
+  isDriving = true;
   distanceMemory = mm_Hight;
-  pwm.pinFreq2(DRIVE_STEP);
-  pwm.pinDuty(DRIVE_STEP, 127);
+  if (mm_Distance > 0) {
+    digitalWrite(DRIVE_DIR, true);
+  }
+  else {
+    digitalWrite(DRIVE_DIR, false);
+  }
+  pwm.pinFreq2(LIFT_STEP);
+  pwm.pinDuty(LIFT_STEP, 127);
   Timer1.start(1000000 * mm_Hight * LIFT_TRANSMISSION / LIFT_FREQUENCY);
 }
 
-void catchDriveStepTimer(){
+void catchDriveStepTimer() {
   xAxis += (double)distanceMemory * 10 * cos(0.1418970);
   pwm.stop(DRIVE_STEP);
+  isDriving = false;
 }
 
-void catchLiftStepTimer(){
+void catchLiftStepTimer() {
   zAxis += distanceMemory * 10;
   pwm.stop(LIFT_STEP);
+  isDriving = false;
 }
 
 void printLCD() {
-    lcd.setCursor(8, 0);    //Set Cursor again to eigth column of second row
-    lcd.print(xAxis, 1);    //Print measured distance
-    lcd.print("cm      ");  //Print your units.
-    lcd.setCursor(8, 1);    //Set Cursor again to eigth column of second row
-    lcd.print(zAxis, 1);    //Print measured distance
-    lcd.print("cm      ");  //Print your units.
+  lcd.setCursor(8, 0);    //Set Cursor again to eigth column of second row
+  lcd.print(xAxis, 1);    //Print measured distance
+  lcd.print("cm      ");  //Print your units.
+  lcd.setCursor(8, 1);    //Set Cursor again to eigth column of second row
+  lcd.print(zAxis, 1);    //Print measured distance
+  lcd.print("cm      ");  //Print your units.
+}
+
+void getPiData() {
+  if (!sentCommand) {
+    // Flush the read queue
+    while (Serial1.available() > 0) {
+      Serial1.read();
+    }
+    Serial.println("SendData");
+    sentCommand = true;
+  }
+  if (Serial1.available() > 0) {
+    height = Serial1.read() * 256 + Serial1.read();
+    distanceToPillar = Serial1.read() * 256 + Serial1.read();
+    distanceToTarget = Serial1.read() * 256 + Serial1.read();
+    while (Serial1.available() > 0) {
+      incomingByte = Serial1.read();
+      if (incomingByte = '\n') {
+        receivedData = true;
+      }
+    }
+  }
+  if (receivedData) {
+    Serial.print("Height: ");
+    Serial.print(height, DEC);
+    Serial.print(" Distance to pillar: ");
+    Serial.print(distanceToPillar, DEC);
+    Serial.print(" Distance to target: ");
+    Serial.println(distanceToTarget, DEC);
+    receivedData = false;
+    sentCommand = false;
+  }
 }
 
