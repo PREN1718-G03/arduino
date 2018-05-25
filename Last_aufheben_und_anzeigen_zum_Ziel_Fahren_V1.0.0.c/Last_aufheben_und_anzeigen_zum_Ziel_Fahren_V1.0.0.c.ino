@@ -23,10 +23,10 @@
 #define LIFT_STEP 6
 #define STOP_SWITCH 10
 #define LIFT_FREQUENCY 300
-#define DRIVE_FREQUENCY 25600
-#define CARGO_START_DISTANCE_MM 750
-#define DRIVE_TRANSMISSION (72.3825877 * 2)   //2.3579 // schritte pro mm
-#define LIFT_TRANSMISSION  (52.5086788 / 16)  //102.85946673 // schritte pro mm
+#define DRIVE_FREQUENCY 17000
+#define CARGO_START_DISTANCE_MM 645
+#define DRIVE_TRANSMISSION 143.317523646   // schritte pro mm 
+#define LIFT_TRANSMISSION  1.286977421568  // schritte pro mm kalibriert am 24.05.18
 
 // Initialisierung
 
@@ -35,15 +35,15 @@ bool isDriving = false;
 int distanceMemory = 0;
 double xAxis = -((double)CARGO_START_DISTANCE_MM) / 10;
 double zAxis = 0;
-int hightList[35] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//int heightList[35] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 DuePWM pwm( LIFT_FREQUENCY, DRIVE_FREQUENCY );
 
 //Initialisierung Kommunikation
 bool sentCommand = false;
 bool receivedData = false;
 char incomingByte = 0;
-int hight = 236;
-int oldHight = 0;
+int height;
+int oldHeight;
 int distanceToPillar = 0;
 int16_t distanceToTarget = 0;
 
@@ -66,6 +66,8 @@ void setup() {
   Timer2.attachInterrupt(catchDriveStepTimer);
   Timer1.attachInterrupt(catchLiftStepTimer);
   initPiData();
+  Serial.println("oldHeight : " + oldHeight);
+  Serial.println("height : " + height);
   lcd.setBacklight(255);
   lcd.begin(16, 2); // initialize the lcd
   lcd.setCursor(0, 0);  //Set LCD cursor to upper left corner, column 0, row 0
@@ -87,19 +89,19 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
+  delay(6000);
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] - 100);
+  moveLiftDistance(oldHeight - 250); //aktuelle Höhe minus 250mm
   while (digitalRead(STOP_SWITCH)) {
     getPiData();
     if (distanceToTarget > 0) {
       moveDriveDistance(distanceToTarget);
-      while (isDriving);
-      moveLiftDistance(-hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] + 100);
-      moveLiftDistance(hightList[(int)((xAxis + CARGO_START_DISTANCE_MM / 10) / 10)] - 100);
+      moveLiftDistance(-height + 235); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      moveLiftDistance(250); // Höher als Hindernisse ziehen
       break;
     }
     else{
-      moveDriveDistance(500);
+      moveDriveDistance(100);
     }
   }
 }
@@ -113,10 +115,10 @@ void moveDriveDistance(int mm_Distance) {
   isDriving = true;
   distanceMemory = mm_Distance;
   if (mm_Distance > 0) {
-    digitalWrite(DRIVE_DIR, true);
+    digitalWrite(DRIVE_DIR, false);
   }
   else {
-    digitalWrite(DRIVE_DIR, false);
+    digitalWrite(DRIVE_DIR, true);
   }
   pwm.pinFreq2(DRIVE_STEP);
   pwm.pinDuty(DRIVE_STEP, 127);
@@ -124,22 +126,22 @@ void moveDriveDistance(int mm_Distance) {
   Timer2.start(1000000 * abs(mm_Distance) * DRIVE_TRANSMISSION / DRIVE_FREQUENCY);
 }
 
-void moveLiftDistance(int mm_Hight) {
+void moveLiftDistance(int mm_height) {
   while(isDriving){
     delay(500);
     Serial.println("warte bis Motor ausgeschaltet");
   }
   isDriving = true;
-  distanceMemory = mm_Hight;
-  if (mm_Hight > 0) {
-    digitalWrite(DRIVE_DIR, true);
+  distanceMemory = mm_height;
+  if (mm_height > 0) {
+    digitalWrite(LIFT_DIR, false);
   }
   else {
-    digitalWrite(DRIVE_DIR, false);
+    digitalWrite(LIFT_DIR, true);
   }
   pwm.pinFreq2(LIFT_STEP);
   pwm.pinDuty(LIFT_STEP, 127);
-  Timer1.start(1000000 * mm_Hight * LIFT_TRANSMISSION / LIFT_FREQUENCY);
+  Timer1.start(1000000 * mm_height * LIFT_TRANSMISSION / LIFT_FREQUENCY);
 }
 
 void catchDriveStepTimer() {
@@ -176,8 +178,8 @@ void initPiData(){
     sentCommand = true;
   }
   if (Serial1.available() > 0) {
-    hight = Serial1.read() * 256 + Serial1.read();
-    Serial.println(hight,10);
+    height = Serial1.read() * 256 + Serial1.read();
+    Serial.println(height,10);
     distanceToPillar = Serial1.read() * 256 + Serial1.read();
     distanceToTarget = Serial1.read() * 256 + Serial1.read();
     while (Serial1.available() > 0) {
@@ -190,7 +192,7 @@ void initPiData(){
 }
 
 void getPiData() {
-  oldHight = hight;
+  oldHeight = height;
   if (!sentCommand) {
     // Flush the read queue
     while (Serial1.available() > 0) {
@@ -200,12 +202,12 @@ void getPiData() {
     sentCommand = true;
   }
   if (Serial1.available() > 0) {
-    hight = Serial1.read() * 256 + Serial1.read();
-    if(abs(hight - oldHight) > 30){
-      hight = oldHight;
+    height = Serial1.read() * 256 + Serial1.read();
+    if(abs(height - oldHeight) > 30){
+      height = oldHeight;
     }
-    zAxis += (hight - oldHight);
-    Serial.println(hight,10);
+    zAxis += (height - oldHeight);
+    Serial.println(height,10);
     distanceToPillar = Serial1.read() * 256 + Serial1.read();
     xAxis = (double)distanceToPillar / 10;
     distanceToTarget = Serial1.read() * 256 + Serial1.read();
@@ -218,8 +220,8 @@ void getPiData() {
     printLCD();
   }
   if (receivedData) {
-    Serial.print("hight: ");
-    Serial.print(hight, DEC);
+    Serial.print("height: ");
+    Serial.print(height, DEC);
     Serial.print(" Distance to pillar: ");
     Serial.print(distanceToPillar, DEC);
     Serial.print(" Distance to target: ");
