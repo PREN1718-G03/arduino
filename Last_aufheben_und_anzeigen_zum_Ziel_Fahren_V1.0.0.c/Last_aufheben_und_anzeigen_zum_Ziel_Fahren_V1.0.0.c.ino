@@ -24,7 +24,7 @@
 #define STOP_SWITCH 10
 #define LIFT_FREQUENCY 300
 #define DRIVE_FREQUENCY 17000
-#define CARGO_START_DISTANCE_MM 640
+#define CARGO_START_DISTANCE_MM 620
 #define DRIVE_TRANSMISSION 143.317523646   // schritte pro mm 
 #define LIFT_TRANSMISSION  1.286977421568  // schritte pro mm kalibriert am 24.05.18
 
@@ -44,6 +44,7 @@ bool isPlaced = false;
 char incomingByte = 0;
 int height = 0;
 int oldHeight;
+int liftHeight;
 int distanceToPillar = 0;
 int16_t distanceToTarget = 0;
 
@@ -62,7 +63,7 @@ void setup() {
   // See http://playground.arduino.cc/Main/I2cScanner
   Wire.begin();
   Timer3.attachInterrupt(getPiData);
-  Timer3.start(1000000);   //jede 800ms aufrufen
+  Timer3.start(1000000);   //jede 1000ms aufrufen
   Timer2.attachInterrupt(catchDriveStepTimer);
   Timer1.attachInterrupt(catchLiftStepTimer);
   Serial.println("oldHeight : " + oldHeight);
@@ -90,17 +91,20 @@ void setup() {
 void loop() {
   delay(6000);
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(oldHeight - 250); //aktuelle Höhe minus 250mm
+  moveLiftDistance(250); //aktuelle Höhe minus 250mm
+  liftHeight = height;
   while (!isPlaced) {
     if (distanceToTarget > 0) {
-      while (distanceToTarget > 0) {
-        moveDriveDistance(distanceToTarget);
-      }
+      //while (distanceToTarget > 0) {
+      distanceToTarget -= 550;
+        moveDriveDistance((distanceToTarget));
+        delay(8000);
+      //}
       Timer3.stop();
       getPiData();
-      moveLiftDistance(-height + 235); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      moveLiftDistance(-250-zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
       printLCD();
-      moveLiftDistance(250); // Höher als Hindernisse ziehen
+      moveLiftDistance(350); // Höher als Hindernisse ziehen
       isPlaced = true;
     }
     else {
@@ -155,7 +159,7 @@ void moveLiftDistance(int mm_height) {
   }
   pwm.pinFreq2(LIFT_STEP);
   pwm.pinDuty(LIFT_STEP, 127);
-  Timer1.start(1000000 * mm_height * LIFT_TRANSMISSION / LIFT_FREQUENCY);
+  Timer1.start(1000000 * abs(mm_height) * LIFT_TRANSMISSION / LIFT_FREQUENCY);
 }
 
 void catchDriveStepTimer() {
