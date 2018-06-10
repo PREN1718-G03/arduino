@@ -89,22 +89,19 @@ void setup() {
 
 /*Main Programm*/
 void loop() {
-  delay(6000);
+  delay(2000);
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(250); //aktuelle Höhe minus 250mm
+  moveLiftDistance(300); //aktuelle Höhe minus 250mm
   liftHeight = height;
   while (!isPlaced) {
     if (distanceToTarget > 0) {
-      //while (distanceToTarget > 0) {
-      distanceToTarget -= 550;
-        moveDriveDistance((distanceToTarget));
-        delay(8000);
-      //}
       Timer3.stop();
+      distanceToTarget -= 500;
+      moveDriveDistance((distanceToTarget));
       getPiData();
-      moveLiftDistance(-250-zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      moveLiftDistance(-270-zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
       printLCD();
-      moveLiftDistance(350); // Höher als Hindernisse ziehen
+      moveLiftDistance(400); // Höher als Hindernisse ziehen
       isPlaced = true;
     }
     else {
