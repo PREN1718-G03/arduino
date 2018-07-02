@@ -24,7 +24,7 @@
 #define STOP_SWITCH 10
 #define LIFT_FREQUENCY 300
 #define DRIVE_FREQUENCY 17000
-#define CARGO_START_DISTANCE_MM 620
+#define CARGO_START_DISTANCE_MM 580
 #define DRIVE_TRANSMISSION 143.317523646   // schritte pro mm 
 #define LIFT_TRANSMISSION  1.286977421568  // schritte pro mm kalibriert am 24.05.18
 
@@ -33,7 +33,7 @@
 LiquidCrystal_PCF8574 lcd(0x27);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 bool isDriving = false;
 int distanceMemory = 0;
-double xAxis = -((double)CARGO_START_DISTANCE_MM) / 10;
+double xAxis = 0;
 double zAxis = 0;
 DuePWM pwm( LIFT_FREQUENCY, DRIVE_FREQUENCY );
 
@@ -91,15 +91,22 @@ void setup() {
 void loop() {
   delay(2000);
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(300); //aktuelle Höhe minus 250mm
+  moveLiftDistance(320); //aktuelle Höhe minus 250mm
   liftHeight = height;
   while (!isPlaced) {
     if (distanceToTarget > 0) {
       Timer3.stop();
-      distanceToTarget -= 500;
-      moveDriveDistance((distanceToTarget));
+      
+      xAxis += distanceToTarget / 10;
+      if (xAxis > 180) {
+        distanceToTarget -= 390;
+      } else {
+        distanceToTarget -= 10;
+      }
+      moveDriveDistance(distanceToTarget);
       getPiData();
-      moveLiftDistance(-270-zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      moveLiftDistance(-280 - zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      zAxis = 0;
       printLCD();
       moveLiftDistance(400); // Höher als Hindernisse ziehen
       isPlaced = true;
@@ -109,7 +116,7 @@ void loop() {
     }
   }
   moveToPillar();
-  while(true){} //in endlosschleife fangen
+  while (true) {} //in endlosschleife fangen
 }
 
 void moveToPillar(void) {
@@ -126,10 +133,10 @@ void moveToPillar(void) {
 
 void moveDriveDistance(int mm_Distance) {
   while (isDriving) {
-  delay(1);
+    delay(1);
   }
   isDriving = true;
-  distanceMemory = mm_Distance;
+  //distanceMemory = mm_Distance;
   if (mm_Distance > 0) {
     digitalWrite(DRIVE_DIR, false);
   }
@@ -176,7 +183,7 @@ void catchLiftStepTimer() {
 
 void printLCD() {
   lcd.setCursor(8, 0);    //Set Cursor again to eigth column of second row
-  lcd.print(xAxis, 1);    //Print measured distance
+  lcd.print((342 - xAxis), 1);    //Print measured distance
   lcd.print("cm      ");  //Print your units.
   lcd.setCursor(8, 1);    //Set Cursor again to eigth column of second row
   lcd.print(zAxis, 1);    //Print measured distance
@@ -214,7 +221,7 @@ void printLCD() {
     }
   }
   Serial.println("Init Pi data finished");
-}*/
+  }*/
 
 void getPiData() {
   Serial.println("getPiData");
@@ -230,12 +237,12 @@ void getPiData() {
   if (Serial1.available() > 0) {
     height = Serial1.read() * 256 + Serial1.read();
     if (oldHeight != 0) {
-      if (abs(oldHeight - height) > 70) {
+      if (abs(oldHeight - height) > 100) {
         height = oldHeight;
       }
       zAxis += (double)(height - oldHeight) / 10;
     }
-    else{
+    else {
       zAxis = 0;
     }
     distanceToPillar = Serial1.read() * 256 + Serial1.read();
