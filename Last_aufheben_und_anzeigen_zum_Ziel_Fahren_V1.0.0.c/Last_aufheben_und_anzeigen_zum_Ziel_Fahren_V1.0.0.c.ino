@@ -90,7 +90,7 @@ void loop() {
   moveDriveDistance(CARGO_START_DISTANCE_MM);
   moveLiftDistance(350); //aktuelle Höhe minus 250mm
   liftHeight = height;
-  while (!isPlaced) {
+  while (!isPlaced && digitalRead(STOP_SWITCH)) {
     if (distanceToTarget > 0) {
       Timer3.stop();
 
