@@ -88,7 +88,7 @@ void setup() {
 void loop() {
   delay(2000);
   moveDriveDistance(CARGO_START_DISTANCE_MM);
-  moveLiftDistance(350); //aktuelle Höhe minus 250mm
+  moveLiftDistance(350);
   liftHeight = height;
   while (!isPlaced && digitalRead(STOP_SWITCH)) {
       moveDriveDistance(4000);
@@ -97,21 +97,21 @@ void loop() {
       Timer3.stop();
       catchDriveStepTimer();
       /*if (xAxis > 190) {
-        distanceToTarget -= 100;
-        zAxis += 1.5;
-      } else if (xAxis > 100) {
-        distanceToTarget -= 310;
-        zAxis -= 1;
-      } else if (xAxis > 80) {
-        distanceToTarget -= 50;
-      } else{
         distanceToTarget += 100;
+      } else if (xAxis > 160) {
+        distanceToTarget += 700;
+      } else */
+      /*if ((xAxis < 140) && (xAxis > 80)) {
+        distanceToTarget += 250;
+      } else if (xAxis > 80) {
+        distanceToTarget += 450;
+      }else{
+        distanceToTarget += 400;
       }*/
-      //distanceToTarget -= 200;
       moveDriveDistance(distanceToTarget);
       xAxis += distanceToTarget / 10;
       getPiData();
-      moveLiftDistance(-310 - zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
+      moveLiftDistance(-330 - zAxis * 10); // auf Höhe absetzen, bei der die Last aufgenommen wurde (20mm weniger wegen Zielplattform)
       int zAxisOld = zAxis;
       moveLiftDistance(100 + 10 * zAxisOld); // Höher als Hindernisse ziehen
       zAxis = 0;
@@ -135,7 +135,7 @@ void moveToPillar(void) {
   pwm.stop(DRIVE_STEP);
 }
 
-void moveDriveDistance(int mm_Distance) {
+void moveDriveDistance(double mm_Distance) {
   while (isDriving) {
     delay(1);
   }
