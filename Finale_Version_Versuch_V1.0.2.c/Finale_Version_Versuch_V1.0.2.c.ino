@@ -91,6 +91,8 @@ void loop() {
   moveLiftDistance(350); //aktuelle Höhe minus 250mm
   liftHeight = height;
   while (!isPlaced && digitalRead(STOP_SWITCH)) {
+      moveDriveDistance(4000);
+      while((distanceToTarget <= 0) && digitalRead(STOP_SWITCH)){}
     if (distanceToTarget > 0) {
       Timer3.stop();
       catchDriveStepTimer();
@@ -116,9 +118,6 @@ void loop() {
       printLCD();
       isPlaced = true;
     }
-    else {
-      moveDriveDistance(500);
-    }
   }
   moveToPillar();
   while (true) {} //in endlosschleife fangen
@@ -141,7 +140,6 @@ void moveDriveDistance(int mm_Distance) {
     delay(1);
   }
   isDriving = true;
-  //distanceMemory = mm_Distance;
   if (mm_Distance > 0) {
     digitalWrite(DRIVE_DIR, false);
   }
@@ -206,9 +204,6 @@ void getPiData() {
   if (Serial1.available() > 0) {
     height = Serial1.read() * 256 + Serial1.read();
     if (oldHeight != 0) {
-      /*if (abs(oldHeight - height) > 100) {
-        height = oldHeight;
-        }*/
       zAxis += (double)(height - oldHeight) / 10;
     }
     else {
@@ -226,12 +221,6 @@ void getPiData() {
     printLCD();
   }
   if (receivedData) {
-    /*Serial.print("height: ");
-      Serial.print(height, DEC);
-      Serial.print(" Distance to pillar: ");
-      Serial.print(distanceToPillar, DEC);
-      Serial.print(" Distance to target: ");
-      Serial.println(distanceToTarget, DEC);*/
     receivedData = false;
     sentCommand = false;
   }
